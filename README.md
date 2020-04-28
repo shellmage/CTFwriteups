@@ -1,2 +1,2 @@
 # CTFwriteups
-a repository for CTF write-ups
+a repository for ctf write-ups
