@@ -98,6 +98,8 @@ while True:
     s.interactive()
     s.close()
 ```
+Once we have a shell on the server, we find the challenge source code files [terminal.c](./terminal.c) and [terminal.h](./terminal.h)<br>
+and the flag!
 # Flag
 ```
 $ cat flag.txt
