@@ -36,7 +36,7 @@ constraints:
 ```
 in this ![python script](./exploit.py) i leaked rbp to calculate the address of the format string<br>
 and libc_start_main (the return address of main) to calculate the address of one gadget at run time<br>
-```python2
+```python
 #!/usr/bin/env python2
 from pwn import *
 
