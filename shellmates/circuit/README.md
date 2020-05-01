@@ -11,9 +11,10 @@ Now it's all up to you to reverse engineer the circuit, and provide us with a de
 
 Yours sincerely, TheMentor.
 ```
+Attachments: ![secret.enc](./secret.enc).<br>
+
 ![alt circuit](./circuit.png)
 
-Attachments: ![circuit.png](./circuit.png), ![secret.enc](./secret.enc).<br>
 
 The circuit encrypts the text one character at the time using only one character as the encryption key<br>
 All we have to do is reverse the circuit and brut-force the encryption key<br>
