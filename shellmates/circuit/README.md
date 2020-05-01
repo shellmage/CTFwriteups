@@ -16,7 +16,7 @@ Attachments: ![secret.enc](./secret.enc).<br>
 ![alt circuit](./circuit.png)
 
 
-The circuit encrypts the text one character at the time using only one character as the encryption key<br>
+The circuit encrypts the text one character at the time using only one byte as the encryption key<br>
 All we have to do is reverse the circuit and brut-force the encryption key<br>
 ```python
 #!/usr/bin/env python2
