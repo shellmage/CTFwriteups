@@ -12,7 +12,7 @@ the pin is random and it keeps changing so we can't brutforce it, let's check th
 
 the bot simply checks if the right pin is in the input message, so we can just generate a long<br>
 message randomly with the provided digits and send it, the discord message length is 2000 chars<br>
-so it's long enough to guess the pin, there are 6 levels with with different digits<br>
+so it's long enough to guess the pin, there are 6 levels with different digits<br>
 here is a small script that generates the messages.<br>
 
 ![script.py](./script.py)
