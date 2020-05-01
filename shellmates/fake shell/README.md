@@ -1,7 +1,5 @@
 # Fake $hell
 
-![alt challenge](./fakeshell.jpg)
-
 ### Description
 ```
 While learning programming, I wrote a small fake terminal in C, it's very simple very few
@@ -10,12 +8,15 @@ It is accessible at: terminal.challs.shellmates.club:1337
 
 Goal: Prove you can escape from the fake shell to the real shell.
 ```
+![alt challenge](./fakeshell.jpg)
 ```
 pwndbg> checksec 
 RELRO           STACK CANARY      NX            PIE
 Partial RELRO   No canary found   NX enabled    PIE enabled
 ```
-Here is the ![Terminal](./terminal) binary and the ![libc](./libc-2.27.so) files.<br>
+#### How not to solve a pwn challenge
+
+Here is the ![Terminal](./terminal) binary and the ![libc](./libc-2.27.so) file.<br>
 When we connect using netcat and check the supported commands, we find these eight commands<br>
 ```
 mate@pwnable:/ $ help
@@ -98,8 +99,7 @@ while True:
     s.interactive()
     s.close()
 ```
-Once we have a shell on the server, we find the challenge source code files [terminal.c](./terminal.c) and [terminal.h](./terminal.h)<br>
-and the flag!
+Once we have a shell on the server, we find the source code files [terminal.c](./terminal.c) and [terminal.h](./terminal.h) and the flag!
 # Flag
 ```
 $ cat flag.txt
