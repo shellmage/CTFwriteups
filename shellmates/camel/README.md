@@ -43,7 +43,7 @@ You are not allowed to use this program
 ```
 when looking at the disassembly with radare2 we find a lot of function calls that seem to be related to ocaml<br>
 after tracing the calls a bit we find the camlRide_the_camel__take_a_ride_219() function and we find the name "Xavier"<br>
-```assembler
+```assembly
 ┌ 168: sym.camlRide_the_camel__take_a_ride_219 ();
 │       ╎    sub rsp, 8
 │       ╎    mov rax, 1
@@ -82,7 +82,7 @@ after tracing the calls a bit we find the camlRide_the_camel__take_a_ride_219() 
 after that it asks for a secret number and if it is equal to 0x2c17c65f it prints "wrong secret number" otherwise it calls<br>
 camlRide_the_camel__check_139() and if it return a number different then one it calls camlRide_the_camel__decrypt_145()
 which decrypts and prints the flag<br>
-```assembler
+```assembly
 ┌ 39: sym.camlRide_the_camel__check_139 ();
 │       ┌─>  cmp rax, 0x2c17c65f
 │      ┌──<  je 0x20050
