@@ -1,13 +1,11 @@
 # Camel
 
 ### Description
-```
-category: Reverse Engineering ⚙️ 
+category: Reverse Engineering ⚙️ <br>
 
-This weird program is different than any other one I've reverse-engineered so far, it looks simple in the way it works
-it prompts for some credentials, but I couldn't even find the main function, can you retrieve the correct credentials?
-```
-Attachment: ![camel](./camel).<br>
+This weird program is different than any other one I've reverse-engineered so far, it looks simple in the way it works<br>
+it prompts for some credentials, but I couldn't even find the main function, can you retrieve the correct credentials?<br>
+Attachment: [camel](./camel).<br>
 
 ![alt challenge](./camel.png)
 
@@ -126,3 +124,4 @@ Welcome, enter the secret number
 23117363
 Congratulations!!! The flag is : shellmates{wh0_kn0ws_ab0ut_0Caml?}
 ```
+after the solving the challenge the admin sent me the [source code](./ride_the_camel.ml).
