@@ -10,9 +10,10 @@ Connect here to see: 3.91.133.232 4001<br>
 
 ### Playing with the binary
 
-```bash
+```
 $ file tr0ll_gu3ssing
-tr0ll_gu3ssing: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=7c962869e837557961eed8c73b617c0b4da0a43a, not stripped
+tr0ll_gu3ssing: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter 
+/lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=7c962869e837557961eed8c73b617c0b4da0a43a, not stripped
 $ checksec --file=tr0ll_gu3ssing
 RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      Symbols
 Partial RELRO   No canary found   NX enabled    No PIE          No RPATH   No RUNPATH   74) Symbols
@@ -58,7 +59,8 @@ undefined8 main(void)
 }
 ```
 So I executed the program with ltrace to copy the password, than executed the program again to enter the password
-```bash
+```
+$ ltrace ./tr0ll_gu3ssing
 setvbuf(0x7f8175d56500, 0, 2, 0)                         = 0
 setvbuf(0x7f8175d56420, 0, 2, 0)                         = 0
 srand(0xfedcba98, 0, 0, 3072)                            = 0
@@ -105,7 +107,7 @@ Can you guess the password : pgFAg3m50ZnhgCVu11oihVKpTpb28UU
 /bin/cat: flag.txt: No such file or directory
 ```
 Cool! Now let's try it in the remote host
-```bash
+```
 $ nc 3.91.133.232 4001
 Can you guess the password : pgFAg3m50ZnhgCVu11oihVKpTpb28UU
 We've been tricked, we've been backstabbed and we've been quite possibly, bambooozled.
