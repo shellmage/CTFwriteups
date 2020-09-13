@@ -1,24 +1,21 @@
 # TicTocTou
 
 ### Description
-.--------------------------S h e l l m a t e s   I n f o s e c   W e e k--------------------------.<br>
-| Challenge: [TicTocTou](./tictoctou)                                                             |<br>
-| Difficulty: Medium                                                                              |<br>
-| Category: Pwn                                                                                   |<br>
-| Description:                                                                                    |<br>
-|              Have you ever played the game named TicTocTou? Yeah, me too, I used to play it a   |<br>
-|                lot during boring classes in primary school, because, you know, playing games    |<br>
-|                          changes your time's perception and the class ends faster!              |<br>
-|                                                                                                 |<br>
-| Author's note:                                                                                  |<br>
-|                Your goal is to privesc to ctf-cracked in order to read the contents of flag.txt |<br>
-|                  Run 'tictoctou' and start pwning, source code is available for this challenge  |<br>
-|                                 under /home/ctf-cracked/, let's do it whitebox!                 |<br>
-|                       PS: ctf-cracked often logs in to the system, maybe this will help.        |<br>
-|                                                gl & hf. - hfz                                   |<br>
-| SSH access: ssh -p2222 ctf@3.91.133.232                                                         |<br>
-| Password : shellmates                                                                           |<br>
-'-------------------------------------------------------------------------------------------------'<br>
+Challenge: [TicTocTou](./tictoctou.c)                                                             <br>
+Difficulty: Medium                                                                              <br>
+Category: Pwn                                                                                   <br>
+Description:                                                                                    <br>
+	Have you ever played the game named TicTocTou? Yeah, me too, I used to play it a   <br>
+	lot during boring classes in primary school, because, you know, playing games    <br>
+	changes your time's perception and the class ends faster!              <br>
+Author's note:                                                                                  <br>
+	Your goal is to privesc to ctf-cracked in order to read the contents of flag.txt <br>
+	Run 'tictoctou' and start pwning, source code is available for this challenge  <br>
+	under /home/ctf-cracked/, let's do it whitebox!                 <br>
+	PS: ctf-cracked often logs in to the system, maybe this will help.        <br>
+	gl & hf. - hfz                                   <br>
+SSH access: ssh -p2222 ctf@3.91.133.232                                                         <br>
+Password : shellmates                                                                           <br>
 ![alt challenge](./tictoctou.jpeg)
 
 ### Playing with the binary
