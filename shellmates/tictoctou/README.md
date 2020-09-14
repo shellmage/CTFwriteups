@@ -23,6 +23,14 @@ The binary is a typical tic-tac-toe game, you play to a bot that uses randomness
 I noticed an interesting feature where the player enters a username and a filepath and he can save the score<br>
 In condition that the player owns that file<br>
 ```
+shell WON against brainless bot on 2020-09-14 at 16:46:41! Not surprising however.
+################# Game stats #################
+# Human (O) plays on cell 5                  #
+# Brainless Bot (X) plays on cell 6          #
+# Human (O) plays on cell 1                  #
+# Brainless Bot (X) plays on cell 3          #
+# Human (O) plays on cell 9                  #
+##############################################
 ```
 Then when I did the static analyses, I found a race condition in the save_stats() function 
 ```C
