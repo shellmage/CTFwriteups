@@ -117,8 +117,7 @@ def main():
     log.info(f'HMAC Signature : {signature}')
 
     r.sendline(signature)
-    r.sendline('exec >&2')
-    r.interactive()
+    print(r.recvline())
 ```
 
 # Flag
