@@ -5,7 +5,7 @@ but I enjoyed solving it this way, please refer to [the author's original write-
 
 # Description
 The path is clear, but do you know how to get there<br>
-Category: PWN
+Category: PWN<br>
 (The code was also provided)
 
 # Why did my mind think this way?
@@ -28,7 +28,7 @@ void print_name(char name[NAME_SIZE]){
 # TL;DR
 
 Technically we can exploit this vuln to overwrite some function code in the code segment with our own shellcode,<br>
-but what i did was:
+but what i did was:<br>
 1 Overwrite the RBP pointer using the format-string, to make it point to the menu function in the code segment<br>
 2 Use the get_name function to overwrite the menu function code in the code segment with our shellcode.<br>
 3 When the menu function gets executed in the next loop iteration, a shell will be poped instead :)<br>
