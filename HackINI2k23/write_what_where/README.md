@@ -22,9 +22,11 @@ First of all, we got this "gift" in the main function:
 ```c
 mprotect((void*)(((unsigned long)&func >> 12) << 12),0x1000,PROT_READ | PROT_WRITE | PROT_EXEC); //This is a gift for you
 ```
-In memory, for security purposes, there is no segment when the process has both write and execute permissions<br>
-and here, this line is making the code segment both writeable and executable, so we can overwrite the code of any function from the binary with our shellcode<br><br>
-And if to do that there is a format-string vulnerbility in the print_name function
+In memory, for security purposes, there is no segment where the process has both write and execute permissions<br>
+and here, this line is making the code segment both writeable and executable (it'a only readable & executable by default"
+![](./permissions.png)
+so we can overwrite the code of any function from the binary with our shellcode<br>
+And to accomplish that, there is a format-string vulnerbility in the print_name function
 ```c
 void print_name(char name[NAME_SIZE]){
     printf(name); // format string :)
@@ -33,8 +35,6 @@ void print_name(char name[NAME_SIZE]){
 
 # TL;DR
 
-Technically we can exploit this vuln to overwrite some function code in the code segment with our own shellcode,<br>
-but what i did was:<br>
 1 Overwrite the RBP pointer using the format-string, to make it point to the menu function in the code segment<br>
 2 Use the get_name function to overwrite the menu function code in the code segment with our shellcode.<br>
 3 When the menu function gets executed in the next loop iteration, a shell will be poped instead :)<br>
