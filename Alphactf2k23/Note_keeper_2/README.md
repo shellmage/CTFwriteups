@@ -4,7 +4,7 @@
 Category: PWN<br>
 Solves: 0
 
-#TL;DR
+# TL;DR
 
 I didn't really participate in this CTF, I joined on the last hour<br>
 The code wasn't provided, only the binary, libc, and ld. I solved it 2 days after the CTF ended,<br>
@@ -23,8 +23,6 @@ libc = ELF("./libc.so.6")
 ld = ELF("./ld-linux-x86-64.so.2")
 
 context.binary = exe
-
-one_gadget =0xe3b04#0xe3b01# 0xe3afe
 
 def add(r, size, content):
     r.recvuntil(b'Enter an option:')
