@@ -1,7 +1,7 @@
 # Just_Pwnme
 
 # Description
-![](./Description.png)
+![](./description.png)
 
 # Checksec
 
